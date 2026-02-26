@@ -1,0 +1,382 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  User, 
+  School, 
+  GraduationCap, 
+  ChevronDown, 
+  Send, 
+  Info,
+  CheckCircle2,
+  AlertCircle,
+  Users,
+  AlertTriangle
+} from 'lucide-react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
+// --- Konfigurasi Firebase ---
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'malika-uniform-app';
+
+// --- Data Tabel Ukuran ---
+const SIZE_DATA = {
+  putra: {
+    kemeja: {
+      title: "Kemeja Putih Panjang Putra",
+      headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada", "Panjang Tangan"],
+      rows: [["S", "42", "66", "92", "54"], ["M", "44", "68", "100", "56"], ["L", "44", "70", "106", "56"], ["XL", "46", "72", "108", "57"], ["XXL", "58", "74", "112", "58"]]
+    },
+    rompi: {
+      title: "Rompi Putra",
+      headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada"],
+      rows: [["S", "36", "56", "92"], ["M", "36", "58", "96"], ["L", "38", "60", "100"], ["XL", "38", "62", "106"], ["XXL", "40", "64", "112"]]
+    },
+    celana: {
+      title: "Celana Biru Putra",
+      headers: ["Ukuran", "Pinggang", "Panjang", "Lingkar Paha", "Kres/Pesak"],
+      rows: [["S", "73", "94", "31", "66"], ["M", "78", "96", "32", "66"], ["L", "83", "96", "34", "68"], ["XL", "88", "98", "35", "70"], ["XXL", "94", "100", "38", "76"]]
+    },
+    gamis: {
+      title: "Gamis Putih Putra",
+      headers: ["Ukuran", "Lebar Dada", "Panjang Gamis", "Panjang Lengan", "Lebar Bahu", "Lingkar Manset"],
+      rows: [["40", "47", "106", "43", "32", "19"], ["42", "49", "110", "45", "34", "19"], ["44", "49", "116", "48", "36", "20"], ["46", "51", "121", "50", "36", "20"], ["48", "52", "126", "52", "38", "21"]]
+    }
+  },
+  putri: {
+    kemeja: {
+      title: "Kemeja Putih Panjang Putri",
+      headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada", "Panjang Tangan"],
+      rows: [["S", "40", "66", "96", "56"], ["M", "41", "68", "100", "56"], ["L", "42", "70", "106", "57"], ["XL", "44", "72", "108", "57"], ["XXL", "46", "72", "112", "58"]]
+    },
+    rompi: {
+      title: "Rompi Putri",
+      headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada"],
+      rows: [["S", "36", "56", "92"], ["M", "36", "58", "96"], ["L", "38", "60", "100"], ["XL", "38", "62", "106"], ["XXL", "40", "64", "112"]]
+    },
+    rok: {
+      title: "Rok Biru Putri",
+      headers: ["Ukuran", "Pinggang Sblm Karet", "Pinggang Stlh Karet", "Panjang"],
+      rows: [["S", "80", "65", "94"], ["M", "86", "68", "94"], ["L", "92", "70", "96"], ["XL", "98", "75", "96"], ["XXL", "100", "80", "98"]]
+    },
+    gamis: {
+      title: "Gamis Hitam Putri",
+      headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada", "Panjang Lengan"],
+      rows: [["S", "40", "132", "92", "54"], ["M", "41", "134", "96", "55"], ["L", "42", "136", "100", "57"], ["XL", "44", "136", "106", "57"], ["XXL", "46", "140", "112", "57"]]
+    }
+  },
+  olahraga: {
+    kaos: {
+      title: "Kaos Olahraga",
+      headers: ["Ukuran", "Panjang Baju", "Lingkar Dada", "Panjang Tangan"],
+      rows: [["S", "69", "49", "71"], ["M", "72", "52", "72"], ["L", "74", "54", "74"], ["XL", "76,5", "57", "75"], ["XXL", "79", "59", "77"]]
+    },
+    celana: {
+      title: "Celana Olahraga",
+      headers: ["Ukuran", "Pinggang", "Panjang", "Lebar Kaki Bawah"],
+      rows: [["S", "100", "100", "17"], ["M", "102", "102", "18"], ["L", "104", "104", "19"], ["XL", "106", "106", "20"], ["XXL", "108", "108", "21"]]
+    }
+  }
+};
+
+const INITIAL_FORM_STATE = {
+  namaLengkap: '',
+  sekolahAsal: '',
+  jenisKelamin: '',
+  jenjang: '',
+  ukuran: {
+    kemeja: { val: '', custom: '' },
+    rompi: { val: '', custom: '' },
+    bawah: { val: '', custom: '' },
+    gamis: { val: '', custom: '' },
+    kaosOlahraga: { val: '', custom: '' },
+    celanaOlahraga: { val: '', custom: '' },
+  }
+};
+
+const App = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(null);
+  const [activeChart, setActiveChart] = useState(null);
+  const [formData, setFormData] = useState(INITIAL_FORM_STATE);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) { console.error("Auth error:", err); }
+    };
+    initAuth();
+    const unsubscribe = onAuthStateChanged(auth, setUser);
+    return () => unsubscribe();
+  }, []);
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSizeChange = (category, type, value) => {
+    setFormData(prev => ({
+      ...prev,
+      ukuran: {
+        ...prev.ukuran,
+        [category]: { ...prev.ukuran[category], [type]: value }
+      }
+    }));
+  };
+
+  const resetToHome = () => {
+    setFormData(INITIAL_FORM_STATE);
+    setSubmitted(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      setError("Autentikasi belum siap. Silakan coba lagi.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+      await addDoc(collectionRef, {
+        ...formData,
+        timestamp: serverTimestamp(),
+        userId: user.uid
+      });
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      setError("Gagal mengirim data. Kesalahan: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const SizeChartModal = ({ data, onClose }) => (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl my-auto" onClick={e => e.stopPropagation()}>
+        <div className="bg-blue-600 p-4 text-white flex justify-between items-center rounded-t-2xl">
+          <h3 className="font-bold">{data.title}</h3>
+          <button onClick={onClose} className="p-1 hover:bg-blue-700 rounded-full transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        <div className="p-4 overflow-x-auto">
+          <table className="w-full text-xs md:text-sm text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-100">
+                {data.headers.map((h, i) => <th key={i} className="p-2 border text-blue-900">{h}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {data.rows.map((row, i) => (
+                <tr key={i} className="hover:bg-blue-50">
+                  {row.map((cell, j) => <td key={j} className="p-2 border font-medium">{cell}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="p-4 bg-gray-50 flex justify-end rounded-b-2xl">
+          <button onClick={onClose} className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold">Tutup</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const SizeInputGroup = ({ label, category, chartData, options }) => (
+    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm transition-all hover:border-blue-200 hover:shadow-md">
+      <div className="flex justify-between items-center mb-2">
+        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+        <button type="button" onClick={() => setActiveChart(chartData)} className="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold flex items-center gap-1 transition-colors hover:bg-blue-100">
+          <Info size={12} /> SIZE CHART
+        </button>
+      </div>
+      <select
+        required
+        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+        value={formData.ukuran[category].val}
+        onChange={(e) => handleSizeChange(category, 'val', e.target.value)}
+      >
+        <option value="">-- Pilih Ukuran --</option>
+        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+        <option value="Custom">Ukuran Istimewa / Jumbo</option>
+      </select>
+      {formData.ukuran[category].val === 'Custom' && (
+        <textarea
+          required
+          placeholder="Detail ukuran (BB/TB/Lingkar Dada cm)"
+          className="w-full mt-2 p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm h-20 resize-none outline-none focus:ring-1 focus:ring-blue-400"
+          value={formData.ukuran[category].custom}
+          onChange={(e) => handleSizeChange(category, 'custom', e.target.value)}
+        />
+      )}
+    </div>
+  );
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-blue-50 flex items-center justify-center p-6">
+        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center scale-up-center">
+          <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="text-green-600" size={48} />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Data Terkirim!</h2>
+          <p className="text-gray-600 mb-8 leading-relaxed">
+            Terima kasih, ukuran seragam Ananda <strong>{formData.namaLengkap}</strong> telah tercatat di sistem MIBS.
+          </p>
+          <button 
+            onClick={resetToHome}
+            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+          >
+            Terimakasih
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isPutra = formData.jenisKelamin === 'Putra';
+  const commonOptions = ["S", "M", "L", "XL", "XXL"];
+  const gamisPutraOptions = ["40", "42", "44", "46", "48"];
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] pb-12 font-sans text-gray-900">
+      {/* Header Bulat Logo */}
+      <div className="bg-blue-700 text-white pb-24 pt-12 px-6 rounded-b-[4rem] shadow-2xl relative overflow-hidden text-center">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+        <div className="max-w-4xl mx-auto flex flex-col items-center relative z-10">
+          <div className="w-28 h-28 bg-white p-1 rounded-full shadow-2xl mb-6 flex items-center justify-center overflow-hidden border-4 border-blue-400">
+            <img 
+              src="https://iili.io/FsLlXA7.png" 
+              alt="Malika Logo" 
+              className="w-full h-full object-contain rounded-full"
+            />
+          </div>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight uppercase">Malika Islamic Boarding School</h1>
+          <p className="mt-2 text-blue-200 font-bold bg-blue-900/30 px-6 py-1 rounded-full text-[10px] md:text-xs tracking-widest uppercase">UKURAN SERAGAM SANTRI 2026/2027</p>
+        </div>
+      </div>
+
+      <main className="max-w-4xl mx-auto px-4 -mt-16 relative z-20">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          
+          <div className="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-white">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-blue-100 rounded-xl text-blue-600"><User size={20} /></div>
+              <h2 className="text-xl font-bold">Identitas Santri</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider ml-1">Nama Lengkap (sesuai data pendaftaran)</label>
+                <input required type="text" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all" 
+                value={formData.namaLengkap} onChange={(e) => handleInputChange('namaLengkap', e.target.value)} placeholder="Contoh: Muhammad Malika" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider ml-1">Sekolah Asal</label>
+                <input required type="text" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-medium transition-all" 
+                value={formData.sekolahAsal} onChange={(e) => handleInputChange('sekolahAsal', e.target.value)} placeholder="Nama Sekolah Sebelumnya" />
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider ml-1">Jenis Kelamin</label>
+                <select required className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-800 appearance-none"
+                value={formData.jenisKelamin} onChange={(e) => handleInputChange('jenisKelamin', e.target.value)}>
+                  <option value="">-- Pilih Jenis Kelamin --</option>
+                  <option value="Putra">Putra (Laki-laki)</option>
+                  <option value="Putri">Putri (Perempuan)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider ml-1">Jenjang Sekolah di Malika Islamic Boarding School</label>
+                <select required className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-800 appearance-none"
+                value={formData.jenjang} onChange={(e) => handleInputChange('jenjang', e.target.value)}>
+                  <option value="">-- Pilih Jenjang --</option>
+                  <option value="Kelas VII SMP">Kelas VII SMP</option>
+                  <option value="Kelas X SMA">Kelas X SMA</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Kotak Peringatan Modern */}
+            <div className="mt-8 p-5 bg-indigo-50/40 border-l-4 border-indigo-600 rounded-r-3xl rounded-l-lg flex gap-4 items-start shadow-sm ring-1 ring-indigo-100">
+              <div className="bg-white p-2.5 rounded-2xl text-indigo-600 shrink-0 shadow-md">
+                <AlertTriangle size={22} />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-extrabold text-indigo-950 text-sm uppercase tracking-wider">Konfirmasi Penting</h4>
+                <p className="text-indigo-900 text-xs leading-relaxed font-medium">
+                  Mohon teliti kembali pilihan <strong>Jenis Kelamin</strong> dan <strong>Jenjang Sekolah</strong>. 
+                  Satu kesalahan kecil akan berakibat fatal pada <span className="font-bold underline decoration-indigo-300">ketersediaan model dan presisi ukuran</span> seragam Ananda.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {formData.jenisKelamin && (
+            <div className="bg-white rounded-3xl shadow-xl p-6 md:p-8 animate-in slide-in-from-bottom-5 duration-500">
+              <div className="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-100"><Users size={20} /></div>
+                  <h2 className="text-xl font-bold">Pilih Ukuran Seragam {formData.jenisKelamin}</h2>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <SizeInputGroup label="Kemeja Putih Panjang" category="kemeja" options={commonOptions} chartData={isPutra ? SIZE_DATA.putra.kemeja : SIZE_DATA.putri.kemeja} />
+                <SizeInputGroup label="Rompi" category="rompi" options={commonOptions} chartData={isPutra ? SIZE_DATA.putra.rompi : SIZE_DATA.putri.rompi} />
+                <SizeInputGroup label={isPutra ? "Celana Biru" : "Rok Biru"} category="bawah" options={commonOptions} chartData={isPutra ? SIZE_DATA.putra.celana : SIZE_DATA.putri.rok} />
+                <SizeInputGroup label={isPutra ? "Gamis Putih" : "Gamis Hitam"} category="gamis" options={isPutra ? gamisPutraOptions : commonOptions} chartData={isPutra ? SIZE_DATA.putra.gamis : SIZE_DATA.putri.gamis} />
+                <SizeInputGroup label="Kaos Olahraga" category="kaosOlahraga" options={commonOptions} chartData={SIZE_DATA.olahraga.kaos} />
+                <SizeInputGroup label="Celana Olahraga" category="celanaOlahraga" options={commonOptions} chartData={SIZE_DATA.olahraga.celana} />
+              </div>
+            </div>
+          )}
+
+          {formData.jenisKelamin && (
+            <div className="flex flex-col items-center gap-6 py-6">
+              {error && <div className="w-full p-4 bg-red-50 border border-red-100 text-red-700 rounded-2xl flex items-center gap-2 text-sm font-bold animate-shake"><AlertCircle size={20}/> {error}</div>}
+              <button 
+                type="submit" 
+                disabled={loading || !user}
+                className="w-full md:w-80 h-16 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-2xl font-black text-xl shadow-2xl shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-3 group"
+              >
+                {loading ? <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div> : <><Send size={24} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /> KIRIM DATA</>}
+              </button>
+              <p className="text-[10px] text-gray-400 text-center px-12 leading-relaxed">Dengan menekan tombol kirim, data akan diproses oleh tim sarana prasarana Malika Boarding School.</p>
+            </div>
+          )}
+        </form>
+      </main>
+
+      <footer className="mt-12 text-center text-gray-400 text-[10px] pb-12 font-medium tracking-widest uppercase">
+        &copy; 2026 Malika Islamic Boarding School.
+      </footer>
+
+      {activeChart && <SizeChartModal data={activeChart} onClose={() => setActiveChart(null)} />}
+      
+      <style>{`
+        .scale-up-center { animation: scale-up-center 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both; }
+        @keyframes scale-up-center { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+        .animate-shake { animation: shake 0.3s ease-in-out; }
+      `}</style>
+    </div>
+  );
+};
+
+export default App;
