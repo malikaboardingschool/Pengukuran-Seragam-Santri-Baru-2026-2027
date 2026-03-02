@@ -3,635 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Input Nilai SAS Ganjil 2025/2026 - Malika IBS</title>
+    <title>Pemesanan Seragam - Malika Islamic Boarding School</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #000000; /* Dark mode base */
-            color: #e0e0e0; /* Light grey text */
-            overflow-x: hidden;
-        }
-        
-        .running-text-container {
-            width: 100%;
-            background-color: #007AFF; /* Biru terang solid */
-            color: #FFFFFF; /* Teks warna putih */
-            font-weight: 500;
-            overflow: hidden;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            z-index: 50;
-        }
-        .running-text p {
-            margin: 0;
-            padding: 8px 0;
-            white-space: nowrap;
-            display: inline-block;
-            animation: marquee 35s linear infinite;
-        }
-        @keyframes marquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #1a1a1a; }
-        ::-webkit-scrollbar-thumb { background: #4a4a4a; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #6a6a6a; }
-
-        /* Custom Card Style */
-        .card {
-            background-color: rgba(29, 29, 31, 0.7);
-            backdrop-filter: blur(8px);
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.3s ease-in-out;
-            color: #e0e0e0;
-        }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.15);
-        }
-        
-        /* Buttons */
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            color: white;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-        .btn:disabled {
-            background-image: none;
-            background-color: #333333;
-            color: #888888;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        .btn-primary {
-            background-image: linear-gradient(135deg, #007AFF, #005AF0);
-        }
-        .btn-primary:not(:disabled):hover {
-            box-shadow: 0 10px 15px -3px rgb(0 122 255 / 0.3);
-            transform: translateY(-2px);
-        }
-        .btn-secondary {
-            background-image: linear-gradient(135deg, #34C759, #28A745);
-        }
-        .btn-secondary:hover {
-            box-shadow: 0 10px 15px -3px rgb(52 199 89 / 0.3);
-            transform: translateY(-2px);
-        }
-        
-        /* Inputs */
-        select, input.grade-input {
-            background-color: rgba(50, 50, 50, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #e0e0e0;
-            transition: all 0.2s;
-        }
-        select:focus, input.grade-input:focus {
-            border-color: #007AFF;
-            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3);
-            background-color: rgba(60, 60, 60, 0.9);
-            outline: none;
-        }
-        
-        /* Gradient Text */
-        .gradient-text-apple {
-            background: linear-gradient(to right, #5AC8FA, #BF5AF2, #FF2D55);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* Table */
-        .table-header-dark {
-            background-color: #1a1a1a;
-            color: #ffffff;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .table-row-dark {
-            background-color: rgba(29, 29, 31, 0.5);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            transition: background-color 0.2s ease;
-        }
-        .table-row-dark:hover {
-            background-color: rgba(40, 40, 42, 0.6);
-        }
-        
-        /* Active Row Highlight */
-        .table-row-dark.active-row {
-            background-color: rgba(0, 122, 255, 0.15) !important;
-            border-left: 4px solid #007AFF;
-        }
-
-        /* Modal */
-        #preview-modal .modal-content {
-            background-color: rgba(29, 29, 31, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #e0e0e0;
-        }
-        #preview-modal .border-b, #preview-modal .border-t {
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-        #preview-modal .modal-footer {
-            background-color: rgba(20, 20, 22, 0.8);
-        }
-
-        /* Toast */
-        #toast {
-            z-index: 100;
-            transition: transform 0.3s ease-in-out;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .scale-up-center { animation: scale-up-center 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both; }
+        @keyframes scale-up-center { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+        .animate-shake { animation: shake 0.3s ease-in-out; }
     </style>
 </head>
-<body class="pb-20">
-    
-    <!-- Main Container -->
-    <div class="container mx-auto p-4 md:p-8 max-w-7xl relative z-10">
-        
-        <!-- Header -->
-        <header class="bg-black/40 backdrop-blur-lg rounded-xl shadow-md p-6 mb-8 flex flex-col md:flex-row items-center gap-6 border border-white/10">
-            <img src="https://iili.io/FsLlXA7.png" alt="Logo Malika Islamic Boarding School" class="h-20 w-20 rounded-full object-cover border-2 border-white/20">
-            <div>
-                <h1 class="text-3xl md:text-4xl font-bold text-white mb-1">
-                    Sistem <span class="gradient-text-apple">Input Nilai SAS Ganjil 2025/2026</span>
-                </h1>
-                <p class="text-white/70 text-lg">Malika Islamic Boarding School</p>
-            </div>
-        </header>
+<body class="bg-[#f8fafc]">
+    <div id="root"></div>
 
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <!-- Left Column: Input Forms -->
-            <div class="lg:col-span-2 space-y-8">
-                <!-- Step 1: Selection Form -->
-                <div id="selection-form" class="card p-8">
-                    <h2 class="text-xl font-bold mb-6 border-b border-white/10 pb-3 text-white">1. Pilih Detail Kelas</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label for="school-level" class="block text-sm font-medium text-white/80 mb-2">Jenjang</label>
-                            <select id="school-level" class="w-full p-3 rounded-lg shadow-sm">
-                                <option value="">Pilih Jenjang...</option>
-                                <option value="SMP">SMP</option>
-                                <option value="SMA">SMA</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="class-name" class="block text-sm font-medium text-white/80 mb-2">Kelas</label>
-                            <select id="class-name" class="w-full p-3 rounded-lg shadow-sm" disabled>
-                                <option>Pilih Jenjang Dulu</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="subject" class="block text-sm font-medium text-white/80 mb-2">Mata Pelajaran</label>
-                            <select id="subject" class="w-full p-3 rounded-lg shadow-sm" disabled>
-                                <option>Pilih Jenjang Dulu</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mt-8 text-right">
-                        <button id="start-input-btn" class="btn btn-primary" disabled>
-                            Mulai Input Nilai &rarr;
-                        </button>
-                    </div>
-                </div>
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-                <!-- Step 2: Grade Input Table -->
-                <div id="grade-input-section" class="card p-8 hidden">
-                    <div class="flex justify-between items-start mb-6 border-b border-white/10 pb-3">
-                        <div>
-                            <h2 class="text-xl font-bold text-white">2. Input Nilai Santri</h2>
-                            <p id="grade-input-header" class="text-white/70"></p>
-                        </div>
-                        <button id="change-selection-btn" class="text-sm font-semibold text-blue-400 hover:text-blue-300 transition">Ubah Pilihan</button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full min-w-full text-sm text-left text-white/80">
-                            <thead class="text-xs uppercase table-header-dark">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 rounded-l-lg w-16">No.</th>
-                                    <th scope="col" class="px-6 py-3">Nama Santri</th>
-                                    <th scope="col" class="px-6 py-3 rounded-r-lg w-40 text-center">Nilai</th>
-                                </tr>
-                            </thead>
-                            <tbody id="student-list-body"></tbody>
-                        </table>
-                    </div>
-                    <div class="mt-8 text-right">
-                        <button id="preview-btn" class="btn btn-secondary">
-                            Preview Nilai
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column: Info & Stats -->
-            <div class="space-y-6">
-                <div class="card p-6 sticky top-6">
-                    <h3 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Statistik Kelas</h3>
-                    <div class="space-y-4">
-                        <div class="bg-white/5 p-4 rounded-lg">
-                            <p class="text-xs text-white/60 mb-1">Rata-rata Nilai</p>
-                            <p id="stat-avg" class="text-2xl font-bold text-blue-400">-</p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-white/5 p-4 rounded-lg">
-                                <p class="text-xs text-white/60 mb-1">Tertinggi</p>
-                                <p id="stat-max" class="text-xl font-bold text-green-400">-</p>
-                            </div>
-                            <div class="bg-white/5 p-4 rounded-lg">
-                                <p class="text-xs text-white/60 mb-1">Terendah</p>
-                                <p id="stat-min" class="text-xl font-bold text-red-400">-</p>
-                            </div>
-                        </div>
-                        <div class="bg-white/5 p-4 rounded-lg">
-                            <p class="text-xs text-white/60 mb-1">Status Pengisian</p>
-                            <p class="text-sm font-medium text-white"><span id="stat-filled">0</span> / <span id="stat-total">0</span> Santri</p>
-                            <div class="w-full bg-gray-700 rounded-full h-1.5 mt-2">
-                                <div id="stat-progress" class="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-6 pt-4 border-t border-white/10">
-                        <p class="text-xs text-white/50 italic">
-                            * Info: Masukkan angka 10-100. Jika santri belum ujian, masukkan tanda strip (-).
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-        </div> 
-    </div>
-
-    <!-- Modal -->
-    <div id="preview-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
-        <div class="modal-content w-full max-w-4xl max-h-[90vh] flex flex-col transform transition-all scale-95 opacity-0 duration-300">
-            <div class="p-6 border-b flex justify-between items-center">
-                <h3 class="text-xl font-bold text-white">Konfirmasi Input Nilai</h3>
-                <button id="close-modal-btn" class="text-white/50 hover:text-white text-3xl">&times;</button>
-            </div>
-            <div class="p-8 overflow-y-auto">
-                <div id="preview-details" class="mb-6 space-y-2 text-white/90"></div>
-                <div class="overflow-x-auto border rounded-lg border-white/10">
-                    <table class="w-full text-sm text-left text-white/80">
-                        <thead class="text-xs uppercase table-header-dark">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 w-16">No.</th>
-                                <th scope="col" class="px-6 py-3">Nama Santri</th>
-                                <th scope="col" class="px-6 py-3 w-24 text-center">Nilai</th>
-                            </tr>
-                        </thead>
-                        <tbody id="preview-table-body"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="p-6 modal-footer rounded-b-xl flex flex-col md:flex-row justify-end gap-4 border-t">
-                <button id="cancel-btn" class="py-3 px-6 rounded-lg font-bold bg-white/10 text-white/80 hover:bg-white/20 transition-colors">
-                    Kembali & Edit
-                </button>
-                <button id="confirm-submit-btn" class="btn btn-primary flex items-center justify-center gap-2">
-                    <span id="submit-text">Konfirmasi & Kirim</span>
-                    <span id="submit-spinner" class="hidden">
-                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </span>
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Toast -->
-    <div id="toast" class="fixed top-5 right-5 text-white py-3 px-6 rounded-lg shadow-lg transform translate-x-[150%]"></div>
-
-    <!-- Running Text -->
-    <div class="running-text-container">
-        <div class="running-text">
-            <p>Setiap ketukan jari Ustadz dan Ustadzah hari ini, adalah investasi kita bersama untuk pemimpin masa depan. Terima kasih atas dedikasi tanpa batas #SalamKangenJalanJalanLagi 🛵 🛫 🚌 😎  &nbsp;&nbsp;&nbsp;&nbsp; Setiap ketukan jari Ustadz dan Ustadzah hari ini, adalah investasi kita bersama untuk pemimpin masa depan. Terima kasih atas dedikasi tanpa batas #SalamKangenJalanJalanLagi . &nbsp;&nbsp;&nbsp;&nbsp;</p>
-        </div>
-    </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    const schoolData = {
-        SMP: {
-            classes: {
-                'Kelas 7 A Putra': ["Athariz Chalief Saputra", "Ahmad Khomaini", "Al Athar Ghaizan Nobel", "Alzabar Akbar", "Arya Devano", "Abyan Dzaky Hafizh Kurniawan", "Fadil Syafif Nugroho Sukri", "Fakhri Muhammad Mumtaz", "I Komang Raditiya Novian Pradana Putra", "Ibad Najwan", "Ibni Shidqie Al Mumtazhar", "Kenzie Dastan Shalahuddin Zan", "Khaerul A'Zam Ismail", "Khairiy Rezki Adhinata", "Lionel Pratama Nugroho", "Mahfidz Ardiansyah", "Mohamad Akromul Azam", "Mohammad Ezra Rafiandhika", "Muhammad Akhtar Al Hisyam", "Muhammad Al Fatih", "Muhammad Fatir Albahri", "Muhammad Naufal Rizki", "Muhammad Syamil At Tsauri", "Nauval Abdul Rasyid", "Pranatantra Fachrie", "Rajata Ibnu Faqih", "Reygi Antajun Hikaru", "Rifqi Irfan Hamizan", "Umar Al Jailaani", "Yossa Dzulfi Andrean", "Zahran Sahil", "Rizky Setyo Nugroho", "Teuku Rizqi Mutha"],
-                'Kelas 7 B Putra': ["Abidzar Nuha Wafi", "Ach. Raihan Faiz As-Sudaisyi", "Ahmad Nazmu Durori", "Akbar Nurfatah Arsadi", "Akhdan Athaya Putra Zulfikar", "Al Barra Ananta Putra", "Annabighoh Syabanu Gunawan", "Arrais Mahardika Rusli", "Athaya Kaysan Hakim", "Aufa Gilang Pratama", "Bilal Abdul Aslam", "Bintang Dasilva Ibrahim", "Brilliant Alziddan Mustofa", "Denny Maulana Yusuf", "Fathir Muhammad Fadhilah", "Haikal Ahfwan", "Harry Harsya Shiddiq", "Ifan Sofyan", "Kenzie Adelio Tristan", "Khairul Walif", "Luthfirrahman Nafis Hananto", "Muhammad Al-gaza Putra Dewian", "Muhammad Arafa Ekiyano Febrian", "Muhammad Dilfa Fattan", "Muhammad Fahriansyah", "Muhammad Fathan Toriq", "Muhammad Haikal Al Faisya", "Muhammad Najetullah", "Muhammad Raditya Fauzan", "Muhammad Waldan", "Rayhan Faiz Abdillah Hadiyanto", "Sultan Fatih Setiawan", "Zhafran Tata Hidayat"],
-                'Kelas 7 A Putri': ["Adara Riyanti", "Aghniya Musamma Harahap", "Ahla Amany Maulidya", "Alivia Zahratukanza", "Alya Ruby Salimah", "Ameera Syahida Ajie", "Asyifa Mahira Lubis", "Bilqis Ghaisani Ahza", "Callysta Lareina Nabiha", "Cordelia Krisna Widyantari", "Deyanna Abigail Baligha Zephania", "Fathya Caliana", "Filzah Ghaisani Fikriyah", "Indhieswara Maharani", "Kanaya Athalla Dzakiyyah", "Kawa'Iba Puti Firmansyah", "Keisha Sahila Az Zahra", "Khansa Ghina Rachmani", "Mehira Mehrnaz Multazam", "Nadiya Fajria Salsabila", "Novilly Azwan", "Putri Mutia Rahmi", "Queenisa Yumna Zahirah", "Rita Madinatul Arofah", "Saffanah Saafia Zahirah", "Shelby Sinar Islamadina", "Shira Rizkia Adara", "Siti Shofa Aulia Rahman", "Syifa Anindya", "Talita Himayatul Kamilah", "Talita Khansa Saputra", "Yukqiu Natasha Ardi", "Zivana Lay"],
-                'Kelas 7 B Putri': ["Aesha Bellvania Kirana", "Aira Fitriani Azzahra", "Aisyah Fahira Husna", "Alya Zahra Nabila", "Ameera Isnain Setiadi", "Aulia Zahra Ibrahim", "Azizahtun Nazwa", "Ghina Bilqis Shabreen", "Hafizhah Alimah", "Haninda Aulia Dayana", "Hilma Arifa Aulia Rosid", "Jihan Amira Karim", "Keyla Khanza Ramadhani", "Nafisa Al Mahira", "Nailatisya Aquina Salsabilla", "Nilam Maulina Anggraini", "R A Najeela Putri Widiarsa", "Rhaqueena Aleameccha Alingga", "Salsabila Zovanka", "Shakila Aulia Sakhiy", "Shifa Mumtazah", "Siti Alifia Zahra", "Siti Zahwa Naura Auni", "Siti Ziarra Nur Al-jaelani", "Syafa Savira", "Syakilah Putri Oktavia", "Syakirah Rizqia Ramadani", "Tuhfatun Najwa", "Vinca Fitranavira Putri", "Zhafira Nur Azzahra", "Tiara Izzatunnisa", "Kinara Rahmadania", "Muthiah Lathifah Azzahra", "Avikah Rosafitri"],
-            },
-            subjects: ["Bahasa Indonesia", "PKn", "Bahasa Inggris", "Matematika", "IPA", "IPS", "Tahsin Tahfizh", "Muhadhoroh", "Tauhid", "Fiqih", "Tafsir", "Hadits", "Tarikh Islam", "Durusul Lughoh", "Mahfuzhot", "Tajwid", "Akhlak Lil Banin", "Muthola'ah", "Khat", "Imla", "Lisan Al Qur'an", "Lisan Bahasa Arab", "Lisan Bahasa Inggris", "Lisan Kitab Kuning", "Lisan Praktik Ibadah"]
-        },
-        SMA: {
-            classes: {
-                'Kelas 10 Putra': ["Adhwa Arsya Gatfan", "Afa Zaidan Putra Tamba", "Ahmad Rafli Dhani Muzakki", "Akmal Ihsan Huwaidi", "Albisna Zinata Ababil", "Asyraf Fairuz Mumtaz", "Attiq Muzaki Ibrahim", "Bayanaca Qotthon Elbarca", "Bazyli Rafif Azka", "Charli Andestian", "Danendra Apta Kayana", "Dhafinzha Muhammad Fakhri", "Fasabbi Haqiqie Pramada Rozak", "Irsyad Haitami Fajrin", "Mikail Abdul Majid", "Mochammad Alfath Dhafin", "Muaimar Ghadafi M. Asri", "Muhamad Fairuz Azmi", "Muhamad Rafka Alvaro", "Muhammad Adil Shidqi", "Muhammad Agla Alfathur Rahman", "Muhammad Ammar Muzakki", "Muhammad Azmi", "Muhammad Fahri Alfarizi", "Muhammad Fahri Rosadi", "Muhammad Suryo Nugra Putra Anwar", "Nawwaf Bilza Pakpahan", "Raditya Bustanul Tamam", "Raihan Ramadhan", "Salim Al Habsyi", "Sayyid Aqil Sakhiy Wahyudi", "Yudha Pratama Nurwicaksana Nasution"],
-                'Kelas 10 Putri': ["Alfina Dhiya Ulhaq", "Amelinda Nur Febrina", "Amira Azzarine", "Anjeli Ghenia Asmedi", "Aulia Zahra Nursakinah", "Callysta Zhahira", "Citra Aulia Saputra", "Egidhea Sakha Gendis", "Faiha Ulayya", "Kanaya Azzalea Maulida", "Kayla Putri Azzahra", "Kesya Anastasya Putri", "Keysha Hana Alzena", "Khansa Avicenna", "Maia Dina Islamiy Sobariah", "Nailah Saffanah Rizqin", "Najwa Althafunisa", "Nasya Adya Mustafidah", "Raihana Radwa Fahira", "Ratu Syahlina Samlawi", "Siti Aulia Rahma", "Syifa Az Zahra", "Tia Anggrianti", "Ussy Elsinasari", "Vicky Fadilah Luthfiyana", "Virly Evelyn Dean Zahra", "Wildatul Hasanah", "Yolanda Febriani", "Yuha Rizqiyatul Muyassaroh", "Zahiratul Aisyi", "Zulfa Nurul Fauziah"]
-            },
-            subjects: ["PKn", "Bahasa Indonesia", "Bahasa Inggris", "Matematika", "Biologi", "Fisika", "Kimia", "Ekonomi", "Geografi", "Sosiologi", "Sejarah", "Tahsin Tahfizh", "Muhadhoroh", "Tauhid", "Fiqih", "Tafsir", "Hadits", "Tarikh Islam", "Durusul Lughoh", "Ushul Fiqih", "Nahwu Shorof", "Mahfuzhot", "Khat", "Imla", "Lisan Al Qur'an", "Lisan Bahasa Arab", "Lisan Bahasa Inggris", "Lisan Kitab Kuning", "Lisan Praktik Ibadah"]
-        }
-    };
-    
-    // --- PENTING: GANTI DENGAN URL DEPLOYMENT SCRIPT ANDA ---
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwK2eNCD8_0ku7ZV98J0suePHzYrHpA35aljockdmMj-SfkBmdW4CCGnM0CgPq8sG1Upw/exec"; 
-
-    // Elements
-    const levelSelect = document.getElementById('school-level');
-    const classSelect = document.getElementById('class-name');
-    const subjectSelect = document.getElementById('subject');
-    const startInputBtn = document.getElementById('start-input-btn');
-    const selectionForm = document.getElementById('selection-form');
-    const gradeInputSection = document.getElementById('grade-input-section');
-    const gradeInputHeader = document.getElementById('grade-input-header');
-    const studentListBody = document.getElementById('student-list-body');
-    const changeSelectionBtn = document.getElementById('change-selection-btn');
-    const previewBtn = document.getElementById('preview-btn');
-    const modal = document.getElementById('preview-modal');
-    const confirmSubmitBtn = document.getElementById('confirm-submit-btn');
-    
-    // Stats Elements
-    const statAvg = document.getElementById('stat-avg');
-    const statMax = document.getElementById('stat-max');
-    const statMin = document.getElementById('stat-min');
-    const statFilled = document.getElementById('stat-filled');
-    const statTotal = document.getElementById('stat-total');
-    const statProgress = document.getElementById('stat-progress');
-
-    // --- Functions ---
-    function updateDropdowns() {
-        const level = levelSelect.value;
-        classSelect.innerHTML = '<option value="">Pilih Kelas...</option>';
-        subjectSelect.innerHTML = '<option value="">Pilih Mapel...</option>';
-        classSelect.disabled = !level;
-        subjectSelect.disabled = !level;
-        
-        if (level) {
-            const data = schoolData[level];
-            Object.keys(data.classes).sort().forEach(className => {
-                classSelect.add(new Option(className, className));
-            });
-            data.subjects.sort().forEach(subject => {
-                subjectSelect.add(new Option(subject, subject));
-            });
-        }
-        validateSelections();
-    }
-
-    function validateSelections() {
-        startInputBtn.disabled = !(levelSelect.value && classSelect.value && subjectSelect.value);
-    }
-    
-    function startGradeInput() {
-        const level = levelSelect.value;
-        const className = classSelect.value;
-        const subject = subjectSelect.value;
-
-        if (!level || !className || !subject) return;
-
-        gradeInputHeader.textContent = `Kelas: ${className} | Mapel: ${subject}`;
-        
-        const students = schoolData[level].classes[className];
-        studentListBody.innerHTML = '';
-        students.forEach((student, index) => {
-            const row = document.createElement('tr');
-            row.className = 'table-row-dark';
-            row.innerHTML = `
-                <td class="px-6 py-4 font-medium text-white/90">${index + 1}</td>
-                <td class="px-6 py-4 student-name">${student}</td>
-                <td class="px-6 py-4 text-center">
-                    <input type="text" class="grade-input w-32 p-2 border rounded-md text-center bg-white/10 text-white placeholder-white/30" placeholder="10-100 atau -">
-                </td>
-            `;
-            studentListBody.appendChild(row);
-        });
-        
-        updateStats();
-        selectionForm.classList.add('hidden');
-        gradeInputSection.classList.remove('hidden');
-    }
-
-    function resetToSelection() {
-        gradeInputSection.classList.add('hidden');
-        selectionForm.classList.remove('hidden');
-        levelSelect.value = '';
-        updateDropdowns();
-    }
-    
-    // --- Stats ---
-    function updateStats() {
-        const inputs = document.querySelectorAll('.grade-input');
-        let total = 0;
-        let count = 0;
-        let filledCount = 0;
-        let max = -Infinity;
-        let min = Infinity;
-        const totalStudents = inputs.length;
-
-        inputs.forEach(input => {
-            const val = input.value.trim();
-            if (val !== '' && !isNaN(val) && val !== '-') {
-                const num = parseFloat(val);
-                total += num;
-                count++;
-                if (num > max) max = num;
-                if (num < min) min = num;
-            }
-            if (val !== '') {
-                filledCount++;
-            }
-        });
-
-        statAvg.textContent = count > 0 ? (total / count).toFixed(1) : '-';
-        statMax.textContent = count > 0 ? max : '-';
-        statMin.textContent = count > 0 ? min : '-';
-        statFilled.textContent = filledCount;
-        statTotal.textContent = totalStudents;
-        
-        const progress = totalStudents > 0 ? (filledCount / totalStudents) * 100 : 0;
-        statProgress.style.width = `${progress}%`;
-    }
-
-    // --- Highlight Row ---
-    function handleFocus(e) {
-        if (e.target.classList.contains('grade-input')) {
-            const row = e.target.closest('tr');
-            if (row) row.classList.add('active-row');
-        }
-    }
-
-    function handleBlur(e) {
-        if (e.target.classList.contains('grade-input')) {
-            const row = e.target.closest('tr');
-            if (row) row.classList.remove('active-row');
-            updateStats(); 
-        }
-    }
-    
-    function showPreview() {
-        const grades = [];
-        let allInputsValid = true;
-
-        document.querySelectorAll('#student-list-body tr').forEach(row => {
-            const name = row.querySelector('.student-name').textContent;
-            const input = row.querySelector('.grade-input');
-            const value = input.value.trim();
-            
-            const isHyphen = value === '-';
-            const isNumeric = !isNaN(value) && value !== '';
-            const isNumericValid = isNumeric && Number(value) >= 10 && Number(value) <= 100;
-
-            if (isHyphen || isNumericValid) {
-                input.style.borderColor = '';
-                input.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
-            } else {
-                allInputsValid = false;
-                input.classList.add('border-red-500', 'ring-2', 'ring-red-500');
-            }
-            grades.push({ name, value: value === '' ? 'BELUM DIISI' : value });
-        });
-
-        if (!allInputsValid) {
-            showToast('Harap isi semua nilai (10-100) atau tanda strip (-).', 'error');
-            return;
-        }
-
-        document.getElementById('preview-details').innerHTML = `
-            <p><span class="font-semibold w-32 inline-block text-blue-400">Jenjang</span>: <span class="text-white">${levelSelect.value}</span></p>
-            <p><span class="font-semibold w-32 inline-block text-blue-400">Kelas</span>: <span class="text-white">${classSelect.value}</span></p>
-            <p><span class="font-semibold w-32 inline-block text-blue-400">Mapel</span>: <span class="text-white">${subjectSelect.value}</span></p>
-        `;
-        
-        const previewTableBody = document.getElementById('preview-table-body');
-        previewTableBody.innerHTML = '';
-        grades.forEach((grade, index) => {
-             previewTableBody.innerHTML += `
-                <tr class="table-row-dark">
-                    <td class="px-6 py-4 font-medium text-white/90">${index + 1}</td>
-                    <td class="px-6 py-4">${grade.name}</td>
-                    <td class="px-6 py-4 font-semibold text-white text-center">${grade.value}</td>
-                </tr>
-             `;
-        });
-        
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        setTimeout(() => modal.querySelector('.modal-content').classList.remove('scale-95', 'opacity-0'), 10);
-    }
-    
-    function closeModal() {
-        const modalContent = modal.querySelector('.modal-content');
-        modalContent.classList.add('scale-95', 'opacity-0');
-        setTimeout(() => modal.classList.add('hidden'), 300);
-    }
-
-    async function submitData() {
-        // Collect data before closing modal
-        const className = classSelect.value;
-        const subject = subjectSelect.value;
-        const gradesData = Array.from(document.querySelectorAll('#student-list-body tr')).map(row => ({
-            studentName: row.querySelector('.student-name').textContent,
-            grade: row.querySelector('.grade-input').value
-        }));
-
-        const payload = {
-            className: className,
-            subject: subject,
-            grades: gradesData
+        // Global Firebase Config (Placeholder - Replace with your own if running locally)
+        const firebaseConfig = window.__firebase_config ? JSON.parse(window.__firebase_config) : {
+            apiKey: "",
+            authDomain: "",
+            projectId: "",
+            storageBucket: "",
+            messagingSenderId: "",
+            appId: ""
         };
-        
-        setLoadingState(true);
-        // Do NOT reset selection yet, keep data in memory
-        
-        try {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload)
-            });
-            const result = await response.json();
-            
-            if (result.result === 'success') {
-                showToast('Nilai berhasil dikirim!');
-                closeModal();
-                resetToSelection(); // Only reset after success
-            } else {
-                throw new Error(result.message);
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = window.__app_id || 'malika-uniform-app';
+
+        window.firebaseTools = { auth, db, appId, collection, addDoc, serverTimestamp, signInAnonymously, onAuthStateChanged };
+    </script>
+
+    <!-- React Application -->
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Custom Icon Components (Simple SVG for reliability in HTML single-file)
+        const IconUser = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
+        const IconTriangle = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>;
+        const IconSend = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>;
+        const IconInfo = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>;
+
+        const SIZE_DATA = {
+            putra: {
+                kemeja: { title: "Kemeja Putih Panjang Putra", headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada", "Panjang Tangan"], rows: [["S", "42", "66", "92", "54"], ["M", "44", "68", "100", "56"], ["L", "44", "70", "106", "56"], ["XL", "46", "72", "108", "57"], ["XXL", "58", "74", "112", "58"]] },
+                rompi: { title: "Rompi Putra", headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada"], rows: [["S", "36", "56", "92"], ["M", "36", "58", "96"], ["L", "38", "60", "100"], ["XL", "38", "62", "106"], ["XXL", "40", "64", "112"]] },
+                celana: { title: "Celana Biru Putra", headers: ["Ukuran", "Pinggang", "Panjang", "Lingkar Paha", "Kres/Pesak"], rows: [["S", "73", "94", "31", "66"], ["M", "78", "96", "32", "66"], ["L", "83", "96", "34", "68"], ["XL", "88", "98", "35", "70"], ["XXL", "94", "100", "38", "76"]] },
+                gamis: { title: "Gamis Putih Putra", headers: ["Ukuran", "Lebar Dada", "Panjang Gamis", "Panjang Lengan", "Bahau", "Manset"], rows: [["40", "47", "106", "43", "32", "19"], ["42", "49", "110", "45", "34", "19"], ["44", "49", "116", "48", "36", "20"], ["46", "51", "121", "50", "36", "20"], ["48", "52", "126", "52", "38", "21"]] }
+            },
+            putri: {
+                kemeja: { title: "Kemeja Putih Panjang Putri", headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada", "Panjang Tangan"], rows: [["S", "40", "66", "96", "56"], ["M", "41", "68", "100", "56"], ["L", "42", "70", "106", "57"], ["XL", "44", "72", "108", "57"], ["XXL", "46", "72", "112", "58"]] },
+                rompi: { title: "Rompi Putri", headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada"], rows: [["S", "36", "56", "92"], ["M", "36", "58", "96"], ["L", "38", "60", "100"], ["XL", "38", "62", "106"], ["XXL", "40", "64", "112"]] },
+                rok: { title: "Rok Biru Putri", headers: ["Ukuran", "Pinggang Sblm", "Pinggang Stlh", "Panjang"], rows: [["S", "80", "65", "94"], ["M", "86", "68", "94"], ["L", "92", "70", "96"], ["XL", "98", "75", "96"], ["XXL", "100", "80", "98"]] },
+                gamis: { title: "Gamis Hitam Putri", headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada", "Lengan"], rows: [["S", "40", "132", "92", "54"], ["M", "41", "134", "96", "55"], ["L", "42", "136", "100", "57"], ["XL", "44", "136", "106", "57"], ["XXL", "46", "140", "112", "57"]] }
+            },
+            olahraga: {
+                kaos: { title: "Kaos Olahraga", headers: ["Ukuran", "Panjang", "Lingkar Dada", "Lengan"], rows: [["S", "69", "49", "71"], ["M", "72", "52", "72"], ["L", "74", "54", "74"], ["XL", "76,5", "57", "75"], ["XXL", "79", "59", "77"]] },
+                celana: { title: "Celana Olahraga", headers: ["Ukuran", "Pinggang", "Panjang", "Lebar Kaki"], rows: [["S", "100", "100", "17"], ["M", "102", "102", "18"], ["L", "104", "104", "19"], ["XL", "106", "106", "20"], ["XXL", "108", "108", "21"]] }
             }
-        } catch (error) {
-            showToast(`Gagal: ${error.message}`, 'error');
-            setLoadingState(false); // Re-enable button on error
+        };
+
+        const INITIAL_FORM = {
+            namaLengkap: '', sekolahAsal: '', jenisKelamin: '', jenjang: '',
+            ukuran: { kemeja: { val: '', custom: '' }, rompi: { val: '', custom: '' }, bawah: { val: '', custom: '' }, gamis: { val: '', custom: '' }, kaosOlahraga: { val: '', custom: '' }, celanaOlahraga: { val: '', custom: '' } }
+        };
+
+        function App() {
+            const [user, setUser] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [submitted, setSubmitted] = useState(false);
+            const [error, setError] = useState(null);
+            const [activeChart, setActiveChart] = useState(null);
+            const [formData, setFormData] = useState(INITIAL_FORM);
+
+            useEffect(() => {
+                const checkAuth = () => {
+                    if (window.firebaseTools) {
+                        const { auth, signInAnonymously, onAuthStateChanged } = window.firebaseTools;
+                        signInAnonymously(auth).catch(e => console.error("Auth silent fail", e));
+                        return onAuthStateChanged(auth, setUser);
+                    }
+                    setTimeout(checkAuth, 500);
+                };
+                const unsub = checkAuth();
+                return () => unsub && unsub();
+            }, []);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!user || !window.firebaseTools) return setError("Sistem belum siap.");
+                setLoading(true); setError(null);
+                try {
+                    const { db, appId, collection, addDoc, serverTimestamp } = window.firebaseTools;
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'orders'), {
+                        ...formData, timestamp: serverTimestamp(), userId: user.uid
+                    });
+                    setSubmitted(true);
+                } catch (err) { setError("Gagal kirim: " + err.message); }
+                finally { setLoading(false); }
+            };
+
+            const SizeInput = ({ label, category, chartData, options }) => (
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm transition-all hover:border-blue-200">
+                    <div className="flex justify-between items-center mb-2">
+                        <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">{label}</label>
+                        <button type="button" onClick={() => setActiveChart(chartData)} className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                            <IconInfo /> INFO
+                        </button>
+                    </div>
+                    <select required className="w-full p-3 bg-gray-50 border border-gray-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" 
+                        value={formData.ukuran[category].val} onChange={e => setFormData({...formData, ukuran: {...formData.ukuran, [category]: {...formData.ukuran[category], val: e.target.value}}})}>
+                        <option value="">-- Pilih --</option>
+                        {options.map(o => <option key={o} value={o}>{o}</option>)}
+                        <option value="Custom">Custom/Jumbo</option>
+                    </select>
+                    {formData.ukuran[category].val === 'Custom' && (
+                        <textarea required placeholder="Detail CM..." className="w-full mt-2 p-2 bg-blue-50 border border-blue-100 rounded text-xs h-16 resize-none"
+                        value={formData.ukuran[category].custom} onChange={e => setFormData({...formData, ukuran: {...formData.ukuran, [category]: {...formData.ukuran[category], custom: e.target.value}}})} />
+                    )}
+                </div>
+            );
+
+            if (submitted) return (
+                <div className="min-h-screen flex items-center justify-center p-6 bg-blue-50">
+                    <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center scale-up-center">
+                        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
+                        <h2 className="text-2xl font-black text-gray-800 mb-2">Berhasil!</h2>
+                        <p className="text-gray-500 text-sm mb-8">Data seragam Ananda <b>{formData.namaLengkap}</b> telah kami terima.</p>
+                        <button onClick={() => {setFormData(INITIAL_FORM); setSubmitted(false);}} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-100">Terimakasih</button>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="pb-20">
+                    <header className="bg-blue-700 text-white pt-12 pb-24 px-6 rounded-b-[3.5rem] shadow-xl text-center relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-full bg-white/5 opacity-20 pointer-events-none"></div>
+                        <div className="relative z-10 flex flex-col items-center">
+                            <div className="w-24 h-24 bg-white p-1 rounded-full shadow-2xl mb-6 border-4 border-blue-400 overflow-hidden">
+                                <img src="https://iili.io/FsLlXA7.png" className="w-full h-full object-contain rounded-full" />
+                            </div>
+                            <h1 className="text-xl md:text-2xl font-black uppercase tracking-tighter">Malika Islamic Boarding School</h1>
+                            <span className="mt-2 bg-blue-900/40 px-4 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">Form Ukuran Seragam 2026/2027</span>
+                        </div>
+                    </header>
+
+                    <main className="max-w-4xl mx-auto px-4 -mt-16 relative z-20">
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="bg-white rounded-[2rem] shadow-xl p-6 md:p-8">
+                                <div className="flex items-center gap-3 mb-6"><div className="text-blue-600"><IconUser /></div><h2 className="font-bold text-lg">Identitas Santri</h2></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Nama Lengkap (Sesuai Pendaftaran)</label>
+                                        <input required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={formData.namaLengkap} onChange={e => setFormData({...formData, namaLengkap: e.target.value})} placeholder="Nama Lengkap" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Sekolah Asal</label>
+                                        <input required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={formData.sekolahAsal} onChange={e => setFormData({...formData, sekolahAsal: e.target.value})} placeholder="Sekolah Asal" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Jenis Kelamin</label>
+                                        <select required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-blue-800 outline-none" value={formData.jenisKelamin} onChange={e => setFormData({...formData, jenisKelamin: e.target.value})}>
+                                            <option value="">-- Pilih --</option>
+                                            <option value="Putra">Putra (Laki-laki)</option>
+                                            <option value="Putri">Putri (Perempuan)</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Jenjang di MIBS</label>
+                                        <select required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-blue-800 outline-none" value={formData.jenjang} onChange={e => setFormData({...formData, jenjang: e.target.value})}>
+                                            <option value="">-- Pilih --</option>
+                                            <option value="Kelas VII SMP">Kelas VII SMP</option>
+                                            <option value="Kelas X SMA">Kelas X SMA</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 p-4 bg-indigo-50 border-l-4 border-indigo-600 rounded-r-2xl flex gap-3 ring-1 ring-indigo-100">
+                                    <div className="text-indigo-600 shrink-0"><IconTriangle /></div>
+                                    <div className="text-[11px] text-indigo-900 leading-relaxed">
+                                        <b>KONFIRMASI PENTING:</b> Mohon teliti pilihan Jenis Kelamin dan Jenjang. Kesalahan pilihan berakibat fatal pada model dan ukuran seragam yang akan dikirimkan.
+                                    </div>
+                                </div>
+                            </div>
+
+                            {formData.jenisKelamin && (
+                                <div className="bg-white rounded-[2rem] shadow-xl p-6 md:p-8 scale-up-center">
+                                    <h2 className="font-bold text-lg mb-6 flex items-center gap-2">
+                                        <span className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-xs">02</span> 
+                                        Ukuran Seragam {formData.jenisKelamin}
+                                    </h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <SizeInput label="Kemeja Putih" category="kemeja" options={["S", "M", "L", "XL", "XXL"]} chartData={formData.jenisKelamin === 'Putra' ? SIZE_DATA.putra.kemeja : SIZE_DATA.putri.kemeja} />
+                                        <SizeInput label="Rompi" category="rompi" options={["S", "M", "L", "XL", "XXL"]} chartData={formData.jenisKelamin === 'Putra' ? SIZE_DATA.putra.rompi : SIZE_DATA.putri.rompi} />
+                                        <SizeInput label={formData.jenisKelamin === 'Putra' ? "Celana Biru" : "Rok Biru"} category="bawah" options={["S", "M", "L", "XL", "XXL"]} chartData={formData.jenisKelamin === 'Putra' ? SIZE_DATA.putra.celana : SIZE_DATA.putri.rok} />
+                                        <SizeInput label={formData.jenisKelamin === 'Putra' ? "Gamis Putih" : "Gamis Hitam"} category="gamis" options={formData.jenisKelamin === 'Putra' ? ["40", "42", "44", "46", "48"] : ["S", "M", "L", "XL", "XXL"]} chartData={formData.jenisKelamin === 'Putra' ? SIZE_DATA.putra.gamis : SIZE_DATA.putri.gamis} />
+                                        <SizeInput label="Kaos Olahraga" category="kaosOlahraga" options={["S", "M", "L", "XL", "XXL"]} chartData={SIZE_DATA.olahraga.kaos} />
+                                        <SizeInput label="Celana Olahraga" category="celanaOlahraga" options={["S", "M", "L", "XL", "XXL"]} chartData={SIZE_DATA.olahraga.celana} />
+                                    </div>
+
+                                    <div className="mt-10 flex flex-col items-center">
+                                        {error && <div className="mb-4 text-xs font-bold text-red-600 bg-red-50 p-3 rounded-xl animate-shake">{error}</div>}
+                                        <button type="submit" disabled={loading} className="w-full md:w-64 py-4 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-3">
+                                            {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><IconSend /> KIRIM DATA</>}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </form>
+                    </main>
+
+                    {activeChart && (
+                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setActiveChart(null)}>
+                            <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                                <div className="bg-blue-600 p-4 text-white font-bold">{activeChart.title}</div>
+                                <div className="p-4 overflow-x-auto">
+                                    <table className="w-full text-[10px] md:text-xs text-left border-collapse">
+                                        <thead><tr className="bg-gray-100">{activeChart.headers.map(h => <th key={h} className="p-2 border">{h}</th>)}</tr></thead>
+                                        <tbody>{activeChart.rows.map((r, i) => <tr key={i}>{r.map(c => <td key={c} className="p-2 border font-medium">{c}</td>)}</tr>)}</tbody>
+                                    </table>
+                                </div>
+                                <div className="p-4 bg-gray-50 text-right">
+                                    <button onClick={() => setActiveChart(null)} className="px-5 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm">Tutup</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
         }
-    }
 
-    function setLoadingState(isLoading) {
-        const btn = document.getElementById('confirm-submit-btn');
-        const txt = document.getElementById('submit-text');
-        const spinner = document.getElementById('submit-spinner');
-        if (isLoading) {
-            btn.disabled = true;
-            txt.classList.add('hidden');
-            spinner.classList.remove('hidden');
-        } else {
-            btn.disabled = false;
-            txt.classList.remove('hidden');
-            spinner.classList.add('hidden');
-        }
-    }
-
-    let toastTimeout;
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        clearTimeout(toastTimeout);
-        toast.textContent = message;
-        toast.className = 'fixed top-5 right-5 text-white py-3 px-6 rounded-lg shadow-lg transform transition-transform duration-500 z-50';
-        
-        if (type === 'error') toast.classList.add('bg-red-600');
-        else if (type === 'info') toast.classList.add('bg-blue-600');
-        else toast.classList.add('bg-green-600');
-        
-        toast.classList.remove('translate-x-[150%]'); // Show
-        toastTimeout = setTimeout(() => toast.classList.add('translate-x-[150%]'), 4000); // Hide
-    }
-
-    // --- Event Listeners ---
-    levelSelect.addEventListener('change', updateDropdowns);
-    classSelect.addEventListener('change', validateSelections);
-    subjectSelect.addEventListener('change', validateSelections);
-    startInputBtn.addEventListener('click', startGradeInput);
-    changeSelectionBtn.addEventListener('click', resetToSelection);
-    previewBtn.addEventListener('click', showPreview);
-    
-    // Focus & Input Listeners
-    studentListBody.addEventListener('focusin', handleFocus);
-    studentListBody.addEventListener('focusout', handleBlur);
-    studentListBody.addEventListener('input', (e) => {
-        if (e.target.classList.contains('grade-input')) updateStats();
-    });
-
-    // Modal listeners
-    document.getElementById('close-modal-btn').addEventListener('click', closeModal);
-    document.getElementById('cancel-btn').addEventListener('click', closeModal);
-    confirmSubmitBtn.addEventListener('click', submitData);
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
-});
-</script>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
