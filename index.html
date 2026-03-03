@@ -44,8 +44,8 @@
         const { useState, useEffect } = React;
 
         // --- KONFIGURASI SPREADSHEET ---
-        // Masukkan URL Web App Google Apps Script Anda di sini
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzgoglT9aKJxJSwCPRcNwwvsOJ5mmh5lsBL43i50FL7XGg1rsbjPehUeDHxfqmLa3s8Gw/exec"; 
+        // Gantilah XXXXXXXXX dengan ID deployment Apps Script Anda
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKnvDNiq2nDytxSzIBeMXu-mGNzxXr2owZM7o511q72v0iD7vRMw-y_jYki07mE4ErFQ/exec"; 
 
         const IconUser = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
         const IconTriangle = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>;
@@ -76,6 +76,38 @@
             ukuran: { kemeja: { val: '', custom: '' }, rompi: { val: '', custom: '' }, bawah: { val: '', custom: '' }, gamis: { val: '', custom: '' }, kaosOlahraga: { val: '', custom: '' }, celanaOlahraga: { val: '', custom: '' } }
         };
 
+        // --- SUB-COMPONENTS (Defined outside to prevent focus loss) ---
+
+        const SizeInput = ({ label, category, chartData, options, value, onChange, onShowChart }) => {
+            return (
+                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition-all hover:border-blue-200">
+                    <div className="flex justify-between items-center mb-3">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">{label}</label>
+                        <button type="button" onClick={() => onShowChart(chartData)} className="text-[11px] bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-bold flex items-center gap-1 hover:bg-blue-100 transition-colors">
+                            <IconInfo /> lIHAT SIZE CHART
+                        </button>
+                    </div>
+                    <select required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl text-base outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none" 
+                        value={value.val} onChange={e => onChange(category, 'val', e.target.value)}>
+                        <option value="">-- Pilih Ukuran --</option>
+                        {options.map(o => <option key={o} value={o}>{o}</option>)}
+                        <option value="Custom">Custom/Jumbo</option>
+                    </select>
+                    {value.val === 'Custom' && (
+                        <div className="mt-3">
+                            <p className="text-[10px] text-blue-500 font-bold mb-1 ml-1 uppercase">Silakan lengkapi angka di bawah:</p>
+                            <textarea 
+                                required 
+                                className="w-full p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm h-32 resize-none focus:ring-2 focus:ring-blue-400 outline-none font-mono"
+                                value={value.custom} 
+                                onChange={e => onChange(category, 'custom', e.target.value)} 
+                            />
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         function App() {
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(false);
@@ -98,28 +130,58 @@
                 initAuth();
             }, []);
 
+            // Helper to generate text template based on category
+            const getCustomTemplate = (category) => {
+                switch(category) {
+                    case 'kemeja': return "Pundak: ... cm\nPanjang: ... cm\nLingkar Dada: ... cm\nPanjang Tangan: ... cm";
+                    case 'rompi': return "Pundak: ... cm\nPanjang: ... cm\nLingkar Dada: ... cm";
+                    case 'bawah': return "Pinggang: ... cm\nPanjang: ... cm\nLingkar Paha: ... cm";
+                    case 'gamis': return "Pundak: ... cm\nPanjang: ... cm\nLingkar Dada: ... cm\nPanjang Lengan: ... cm";
+                    case 'kaosOlahraga': return "Panjang Baju: ... cm\nLingkar Dada: ... cm\nPanjang Tangan: ... cm";
+                    case 'celanaOlahraga': return "Pinggang: ... cm\nPanjang: ... cm\nLebar Kaki Bawah: ... cm";
+                    default: return "Detail ukuran: ";
+                }
+            };
+
+            const handleSizeChange = (category, type, value) => {
+                setFormData(prev => {
+                    const newUkuran = { ...prev.ukuran[category] };
+                    newUkuran[type] = value;
+
+                    // If they just switched to "Custom" and the field is empty, pre-fill with template
+                    if (type === 'val' && value === 'Custom' && !newUkuran.custom) {
+                        newUkuran.custom = getCustomTemplate(category);
+                    }
+
+                    return {
+                        ...prev,
+                        ukuran: {
+                            ...prev.ukuran,
+                            [category]: newUkuran
+                        }
+                    };
+                });
+            };
+
             const handleSubmit = async (e) => {
                 e.preventDefault();
                 setLoading(true); setError(null);
                 
                 try {
-                    // 1. Kirim ke Google Spreadsheet (via Apps Script)
                     const spreadSheetData = {
-                        ...formData,
                         namaLengkap: formData.namaLengkap,
                         sekolahAsal: formData.sekolahAsal,
                         jenisKelamin: formData.jenisKelamin,
                         tingkat: formData.jenjang,
-                        ukuranKemeja: `${formData.ukuran.kemeja.val}${formData.ukuran.kemeja.custom ? ' ('+formData.ukuran.kemeja.custom+')' : ''}`,
-                        ukuranRompi: `${formData.ukuran.rompi.val}${formData.ukuran.rompi.custom ? ' ('+formData.ukuran.rompi.custom+')' : ''}`,
-                        ukuranBawah: `${formData.ukuran.bawah.val}${formData.ukuran.bawah.custom ? ' ('+formData.ukuran.bawah.custom+')' : ''}`,
-                        ukuranGamis: `${formData.ukuran.gamis.val}${formData.ukuran.gamis.custom ? ' ('+formData.ukuran.gamis.custom+')' : ''}`,
-                        ukuranKaosOlahraga: `${formData.ukuran.kaosOlahraga.val}${formData.ukuran.kaosOlahraga.custom ? ' ('+formData.ukuran.kaosOlahraga.custom+')' : ''}`,
-                        ukuranCelanaOlahraga: `${formData.ukuran.celanaOlahraga.val}${formData.ukuran.celanaOlahraga.custom ? ' ('+formData.ukuran.celanaOlahraga.custom+')' : ''}`,
+                        ukuranKemeja: formData.ukuran.kemeja.val === 'Custom' ? formData.ukuran.kemeja.custom : formData.ukuran.kemeja.val,
+                        ukuranRompi: formData.ukuran.rompi.val === 'Custom' ? formData.ukuran.rompi.custom : formData.ukuran.rompi.val,
+                        ukuranBawah: formData.ukuran.bawah.val === 'Custom' ? formData.ukuran.bawah.custom : formData.ukuran.bawah.val,
+                        ukuranGamis: formData.ukuran.gamis.val === 'Custom' ? formData.ukuran.gamis.custom : formData.ukuran.gamis.val,
+                        ukuranKaosOlahraga: formData.ukuran.kaosOlahraga.val === 'Custom' ? formData.ukuran.kaosOlahraga.custom : formData.ukuran.kaosOlahraga.val,
+                        ukuranCelanaOlahraga: formData.ukuran.celanaOlahraga.val === 'Custom' ? formData.ukuran.celanaOlahraga.custom : formData.ukuran.celanaOlahraga.val,
                         tanggal: new Date().toLocaleString('id-ID')
                     };
 
-                    // Kami menggunakan mode: 'no-cors' agar pengiriman tetap berjalan meski script google tidak mengirim header CORS
                     await fetch(SCRIPT_URL, {
                         method: 'POST',
                         mode: 'no-cors',
@@ -127,7 +189,6 @@
                         body: JSON.stringify(spreadSheetData)
                     });
 
-                    // 2. Backup ke Firestore (Opsional)
                     if (window.firebaseTools && user) {
                         const { db, appId, collection, addDoc, serverTimestamp } = window.firebaseTools;
                         await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'orders'), {
@@ -143,39 +204,6 @@
                 }
             };
 
-            const getCustomPlaceholder = (category) => {
-                switch(category) {
-                    case 'kemeja': return "tulis ukuran pundak, panjang, lingkar dada dan panjang tangan";
-                    case 'rompi': return "tulis ukuran pundak, panjang, dan lingkar dada";
-                    case 'bawah': return "tulis ukuran pinggang, panjang, dan lingkar paha";
-                    case 'gamis': return "tulis ukuran pundak, panjang, lingkar dada, dan panjang lengan";
-                    case 'kaosOlahraga': return "tulis ukuran panjang baju, lingkar dada, dan panjang tangan";
-                    case 'celanaOlahraga': return "tulis ukuran pinggang, panjang, dan lebar kaki bawah";
-                    default: return "tulis ukuran detail sesuai size chart";
-                }
-            };
-
-            const SizeInput = ({ label, category, chartData, options }) => (
-                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition-all hover:border-blue-200">
-                    <div className="flex justify-between items-center mb-3">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">{label}</label>
-                        <button type="button" onClick={() => setActiveChart(chartData)} className="text-[11px] bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-bold flex items-center gap-1 hover:bg-blue-100 transition-colors">
-                            <IconInfo /> SIZE CHART
-                        </button>
-                    </div>
-                    <select required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl text-base outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none" 
-                        value={formData.ukuran[category].val} onChange={e => setFormData({...formData, ukuran: {...formData.ukuran, [category]: {...formData.ukuran[category], val: e.target.value}}})}>
-                        <option value="">-- Pilih --</option>
-                        {options.map(o => <option key={o} value={o}>{o}</option>)}
-                        <option value="Custom">Custom/Jumbo</option>
-                    </select>
-                    {formData.ukuran[category].val === 'Custom' && (
-                        <textarea required placeholder={getCustomPlaceholder(category)} className="w-full mt-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm h-28 resize-none focus:ring-2 focus:ring-blue-400 outline-none"
-                        value={formData.ukuran[category].custom} onChange={e => setFormData({...formData, ukuran: {...formData.ukuran, [category]: {...formData.ukuran[category], custom: e.target.value}}})} />
-                    )}
-                </div>
-            );
-
             if (submitted) return (
                 <div className="min-h-screen flex items-center justify-center p-6 bg-blue-50">
                     <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center scale-up-center">
@@ -183,11 +211,13 @@
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                         </div>
                         <h2 className="text-2xl font-black text-gray-800 mb-2">Berhasil!</h2>
-                        <p className="text-gray-600 text-base mb-8 leading-relaxed">Data seragam Ananda <b>{formData.namaLengkap}</b> telah berhasil dikirim ke Spreadsheet Panitia.</p>
-                        <button onClick={() => {setFormData(INITIAL_FORM); setSubmitted(false);}} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-100 active:scale-95 transition-all text-lg">Terimakasih</button>
+                        <p className="text-gray-600 text-base mb-8 leading-relaxed">Data seragam Ananda <b>{formData.namaLengkap}</b> telah berhasil dikirim ke database Panitia.</p>
+                        <button onClick={() => {setFormData(INITIAL_FORM); setSubmitted(false);}} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-100 active:scale-95 transition-all text-lg text-center">Terimakasih</button>
                     </div>
                 </div>
             );
+
+            const isPutra = formData.jenisKelamin === 'Putra';
 
             return (
                 <div className="pb-24">
@@ -217,18 +247,18 @@
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest ml-1">Jenis Kelamin</label>
-                                        <select required className="w-full p-5 bg-gray-50 border border-gray-100 rounded-[1.5rem] font-bold text-blue-800 outline-none text-base" value={formData.jenisKelamin} onChange={e => setFormData({...formData, jenisKelamin: e.target.value})}>
-                                            <option value="">-- Pilih --</option>
+                                        <select required className="w-full p-5 bg-gray-50 border border-gray-100 rounded-[1.5rem] font-bold text-blue-800 outline-none text-base transition-all" value={formData.jenisKelamin} onChange={e => setFormData({...formData, jenisKelamin: e.target.value})}>
+                                            <option value="">-- Pilih Jenis Kelamin --</option>
                                             <option value="Putra">Putra (Laki-laki)</option>
                                             <option value="Putri">Putri (Perempuan)</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest ml-1">Tingkat ( Kelas pada bulan juli 2026 di Malika )</label>
-                                        <select required className="w-full p-5 bg-gray-50 border border-gray-100 rounded-[1.5rem] font-bold text-blue-800 outline-none text-base" value={formData.jenjang} onChange={e => setFormData({...formData, jenjang: e.target.value})}>
-                                            <option value="">-- Pilih --</option>
-                                            <option value="Kelas VII SMP">Kelas VII SMP</option>
-                                            <option value="Kelas X SMA">Kelas X SMA</option>
+                                        <select required className="w-full p-5 bg-gray-50 border border-gray-100 rounded-[1.5rem] font-bold text-blue-800 outline-none text-base transition-all" value={formData.jenjang} onChange={e => setFormData({...formData, jenjang: e.target.value})}>
+                                            <option value="">-- Pilih Tingkat --</option>
+                                            <option value="Kelas VII SMP">Kelas VII SMP Malika</option>
+                                            <option value="Kelas X SMA">Kelas X SMA Malika</option>
                                         </select>
                                     </div>
                                 </div>
@@ -247,12 +277,60 @@
                                         Ukuran Seragam {formData.jenisKelamin}
                                     </h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <SizeInput label="Kemeja Putih" category="kemeja" options={["S", "M", "L", "XL", "XXL"]} chartData={formData.jenisKelamin === 'Putra' ? SIZE_DATA.putra.kemeja : SIZE_DATA.putri.kemeja} />
-                                        <SizeInput label="Rompi" category="rompi" options={["S", "M", "L", "XL", "XXL"]} chartData={formData.jenisKelamin === 'Putra' ? SIZE_DATA.putra.rompi : SIZE_DATA.putri.rompi} />
-                                        <SizeInput label={formData.jenisKelamin === 'Putra' ? "Celana Biru" : "Rok Biru"} category="bawah" options={["S", "M", "L", "XL", "XXL"]} chartData={formData.jenisKelamin === 'Putra' ? SIZE_DATA.putra.celana : SIZE_DATA.putri.rok} />
-                                        <SizeInput label={formData.jenisKelamin === 'Putra' ? "Gamis Putih" : "Gamis Hitam"} category="gamis" options={formData.jenisKelamin === 'Putra' ? ["40", "42", "44", "46", "48"] : ["S", "M", "L", "XL", "XXL"]} chartData={formData.jenisKelamin === 'Putra' ? SIZE_DATA.putra.gamis : SIZE_DATA.putri.gamis} />
-                                        <SizeInput label="Kaos Olahraga" category="kaosOlahraga" options={["S", "M", "L", "XL", "XXL"]} chartData={SIZE_DATA.olahraga.kaos} />
-                                        <SizeInput label="Celana Olahraga" category="celanaOlahraga" options={["S", "M", "L", "XL", "XXL"]} chartData={SIZE_DATA.olahraga.celana} />
+                                        <SizeInput 
+                                            label="Kemeja Putih" 
+                                            category="kemeja" 
+                                            options={["S", "M", "L", "XL", "XXL"]} 
+                                            value={formData.ukuran.kemeja}
+                                            onChange={handleSizeChange}
+                                            onShowChart={setActiveChart}
+                                            chartData={isPutra ? SIZE_DATA.putra.kemeja : SIZE_DATA.putri.kemeja} 
+                                        />
+                                        <SizeInput 
+                                            label="Rompi" 
+                                            category="rompi" 
+                                            options={["S", "M", "L", "XL", "XXL"]} 
+                                            value={formData.ukuran.rompi}
+                                            onChange={handleSizeChange}
+                                            onShowChart={setActiveChart}
+                                            chartData={isPutra ? SIZE_DATA.putra.rompi : SIZE_DATA.putri.rompi} 
+                                        />
+                                        <SizeInput 
+                                            label={isPutra ? "Celana Biru" : "Rok Biru"} 
+                                            category="bawah" 
+                                            options={["S", "M", "L", "XL", "XXL"]} 
+                                            value={formData.ukuran.bawah}
+                                            onChange={handleSizeChange}
+                                            onShowChart={setActiveChart}
+                                            chartData={isPutra ? SIZE_DATA.putra.celana : SIZE_DATA.putri.rok} 
+                                        />
+                                        <SizeInput 
+                                            label={isPutra ? "Gamis Putih" : "Gamis Hitam"} 
+                                            category="gamis" 
+                                            options={isPutra ? ["40", "42", "44", "46", "48"] : ["S", "M", "L", "XL", "XXL"]} 
+                                            value={formData.ukuran.gamis}
+                                            onChange={handleSizeChange}
+                                            onShowChart={setActiveChart}
+                                            chartData={isPutra ? SIZE_DATA.putra.gamis : SIZE_DATA.putri.gamis} 
+                                        />
+                                        <SizeInput 
+                                            label="Kaos Olahraga" 
+                                            category="kaosOlahraga" 
+                                            options={["S", "M", "L", "XL", "XXL"]} 
+                                            value={formData.ukuran.kaosOlahraga}
+                                            onChange={handleSizeChange}
+                                            onShowChart={setActiveChart}
+                                            chartData={SIZE_DATA.olahraga.kaos} 
+                                        />
+                                        <SizeInput 
+                                            label="Celana Olahraga" 
+                                            category="celanaOlahraga" 
+                                            options={["S", "M", "L", "XL", "XXL"]} 
+                                            value={formData.ukuran.celanaOlahraga}
+                                            onChange={handleSizeChange}
+                                            onShowChart={setActiveChart}
+                                            chartData={SIZE_DATA.olahraga.celana} 
+                                        />
                                     </div>
                                     <div className="mt-12 flex flex-col items-center">
                                         {error && <div className="mb-6 text-sm font-bold text-red-600 bg-red-50 p-4 rounded-2xl animate-shake border border-red-100">{error}</div>}
