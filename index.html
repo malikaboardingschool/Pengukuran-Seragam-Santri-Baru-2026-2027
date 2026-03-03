@@ -23,56 +23,51 @@
 <body class="bg-[#f8fafc]">
     <div id="root"></div>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs (Internal Storage Backup) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-        // Global Firebase Config (Placeholder - Replace with your own if running locally)
-        const firebaseConfig = window.__firebase_config ? JSON.parse(window.__firebase_config) : {
-            apiKey: "",
-            authDomain: "",
-            projectId: "",
-            storageBucket: "",
-            messagingSenderId: "",
-            appId: ""
-        };
-
+        const firebaseConfig = window.__firebase_config ? JSON.parse(window.__firebase_config) : { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = window.__app_id || 'malika-uniform-app';
+        const initialAuthToken = window.__initial_auth_token;
 
-        window.firebaseTools = { auth, db, appId, collection, addDoc, serverTimestamp, signInAnonymously, onAuthStateChanged };
+        window.firebaseTools = { auth, db, appId, initialAuthToken, collection, addDoc, serverTimestamp, signInAnonymously, signInWithCustomToken, onAuthStateChanged };
     </script>
 
     <!-- React Application -->
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Custom Icon Components (Simple SVG for reliability in HTML single-file)
-        const IconUser = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
-        const IconTriangle = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>;
-        const IconSend = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>;
-        const IconInfo = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>;
+        // --- KONFIGURASI SPREADSHEET ---
+        // Masukkan URL Web App Google Apps Script Anda di sini
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzgoglT9aKJxJSwCPRcNwwvsOJ5mmh5lsBL43i50FL7XGg1rsbjPehUeDHxfqmLa3s8Gw/exec"; 
+
+        const IconUser = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
+        const IconTriangle = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>;
+        const IconSend = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>;
+        const IconInfo = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>;
 
         const SIZE_DATA = {
             putra: {
                 kemeja: { title: "Kemeja Putih Panjang Putra", headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada", "Panjang Tangan"], rows: [["S", "42", "66", "92", "54"], ["M", "44", "68", "100", "56"], ["L", "44", "70", "106", "56"], ["XL", "46", "72", "108", "57"], ["XXL", "58", "74", "112", "58"]] },
                 rompi: { title: "Rompi Putra", headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada"], rows: [["S", "36", "56", "92"], ["M", "36", "58", "96"], ["L", "38", "60", "100"], ["XL", "38", "62", "106"], ["XXL", "40", "64", "112"]] },
                 celana: { title: "Celana Biru Putra", headers: ["Ukuran", "Pinggang", "Panjang", "Lingkar Paha", "Kres/Pesak"], rows: [["S", "73", "94", "31", "66"], ["M", "78", "96", "32", "66"], ["L", "83", "96", "34", "68"], ["XL", "88", "98", "35", "70"], ["XXL", "94", "100", "38", "76"]] },
-                gamis: { title: "Gamis Putih Putra", headers: ["Ukuran", "Lebar Dada", "Panjang Gamis", "Panjang Lengan", "Bahau", "Manset"], rows: [["40", "47", "106", "43", "32", "19"], ["42", "49", "110", "45", "34", "19"], ["44", "49", "116", "48", "36", "20"], ["46", "51", "121", "50", "36", "20"], ["48", "52", "126", "52", "38", "21"]] }
+                gamis: { title: "Gamis Putih Putra", headers: ["Ukuran", "Lebar Dada", "Panjang Gamis", "Panjang Lengan", "Bahu", "Manset"], rows: [["40", "47", "106", "43", "32", "19"], ["42", "49", "110", "45", "34", "19"], ["44", "49", "116", "48", "36", "20"], ["46", "51", "121", "50", "36", "20"], ["48", "52", "126", "52", "38", "21"]] }
             },
             putri: {
                 kemeja: { title: "Kemeja Putih Panjang Putri", headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada", "Panjang Tangan"], rows: [["S", "40", "66", "96", "56"], ["M", "41", "68", "100", "56"], ["L", "42", "70", "106", "57"], ["XL", "44", "72", "108", "57"], ["XXL", "46", "72", "112", "58"]] },
                 rompi: { title: "Rompi Putri", headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada"], rows: [["S", "36", "56", "92"], ["M", "36", "58", "96"], ["L", "38", "60", "100"], ["XL", "38", "62", "106"], ["XXL", "40", "64", "112"]] },
-                rok: { title: "Rok Biru Putri", headers: ["Ukuran", "Pinggang Sblm", "Pinggang Stlh", "Panjang"], rows: [["S", "80", "65", "94"], ["M", "86", "68", "94"], ["L", "92", "70", "96"], ["XL", "98", "75", "96"], ["XXL", "100", "80", "98"]] },
+                rok: { title: "Rok Biru Putri", headers: ["Ukuran", "Pinggang Sblm Karet", "Pinggang Stlh Karet", "Panjang"], rows: [["S", "80", "65", "94"], ["M", "86", "68", "94"], ["L", "92", "70", "96"], ["XL", "98", "75", "96"], ["XXL", "100", "80", "98"]] },
                 gamis: { title: "Gamis Hitam Putri", headers: ["Ukuran", "Pundak", "Panjang", "Lingkar Dada", "Lengan"], rows: [["S", "40", "132", "92", "54"], ["M", "41", "134", "96", "55"], ["L", "42", "136", "100", "57"], ["XL", "44", "136", "106", "57"], ["XXL", "46", "140", "112", "57"]] }
             },
             olahraga: {
-                kaos: { title: "Kaos Olahraga", headers: ["Ukuran", "Panjang", "Lingkar Dada", "Lengan"], rows: [["S", "69", "49", "71"], ["M", "72", "52", "72"], ["L", "74", "54", "74"], ["XL", "76,5", "57", "75"], ["XXL", "79", "59", "77"]] },
-                celana: { title: "Celana Olahraga", headers: ["Ukuran", "Pinggang", "Panjang", "Lebar Kaki"], rows: [["S", "100", "100", "17"], ["M", "102", "102", "18"], ["L", "104", "104", "19"], ["XL", "106", "106", "20"], ["XXL", "108", "108", "21"]] }
+                kaos: { title: "Kaos Olahraga", headers: ["Ukuran", "Panjang Baju", "Lingkar Dada", "Panjang Tangan"], rows: [["S", "69", "49", "71"], ["M", "72", "52", "72"], ["L", "74", "54", "74"], ["XL", "76,5", "57", "75"], ["XXL", "79", "59", "77"]] },
+                celana: { title: "Celana Olahraga", headers: ["Ukuran", "Pinggang", "Panjang", "Lebar Kaki Bawah"], rows: [["S", "100", "100", "17"], ["M", "102", "102", "18"], ["L", "104", "104", "19"], ["XL", "106", "106", "20"], ["XXL", "108", "108", "21"]] }
             }
         };
 
@@ -90,48 +85,92 @@
             const [formData, setFormData] = useState(INITIAL_FORM);
 
             useEffect(() => {
-                const checkAuth = () => {
+                const initAuth = async () => {
                     if (window.firebaseTools) {
-                        const { auth, signInAnonymously, onAuthStateChanged } = window.firebaseTools;
-                        signInAnonymously(auth).catch(e => console.error("Auth silent fail", e));
+                        const { auth, initialAuthToken, signInWithCustomToken, signInAnonymously, onAuthStateChanged } = window.firebaseTools;
+                        try {
+                            if (initialAuthToken) { await signInWithCustomToken(auth, initialAuthToken); } 
+                            else { await signInAnonymously(auth); }
+                        } catch (e) { await signInAnonymously(auth).catch(() => {}); }
                         return onAuthStateChanged(auth, setUser);
-                    }
-                    setTimeout(checkAuth, 500);
+                    } else { setTimeout(initAuth, 500); }
                 };
-                const unsub = checkAuth();
-                return () => unsub && unsub();
+                initAuth();
             }, []);
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
-                if (!user || !window.firebaseTools) return setError("Sistem belum siap.");
                 setLoading(true); setError(null);
+                
                 try {
-                    const { db, appId, collection, addDoc, serverTimestamp } = window.firebaseTools;
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'orders'), {
-                        ...formData, timestamp: serverTimestamp(), userId: user.uid
+                    // 1. Kirim ke Google Spreadsheet (via Apps Script)
+                    const spreadSheetData = {
+                        ...formData,
+                        namaLengkap: formData.namaLengkap,
+                        sekolahAsal: formData.sekolahAsal,
+                        jenisKelamin: formData.jenisKelamin,
+                        tingkat: formData.jenjang,
+                        ukuranKemeja: `${formData.ukuran.kemeja.val}${formData.ukuran.kemeja.custom ? ' ('+formData.ukuran.kemeja.custom+')' : ''}`,
+                        ukuranRompi: `${formData.ukuran.rompi.val}${formData.ukuran.rompi.custom ? ' ('+formData.ukuran.rompi.custom+')' : ''}`,
+                        ukuranBawah: `${formData.ukuran.bawah.val}${formData.ukuran.bawah.custom ? ' ('+formData.ukuran.bawah.custom+')' : ''}`,
+                        ukuranGamis: `${formData.ukuran.gamis.val}${formData.ukuran.gamis.custom ? ' ('+formData.ukuran.gamis.custom+')' : ''}`,
+                        ukuranKaosOlahraga: `${formData.ukuran.kaosOlahraga.val}${formData.ukuran.kaosOlahraga.custom ? ' ('+formData.ukuran.kaosOlahraga.custom+')' : ''}`,
+                        ukuranCelanaOlahraga: `${formData.ukuran.celanaOlahraga.val}${formData.ukuran.celanaOlahraga.custom ? ' ('+formData.ukuran.celanaOlahraga.custom+')' : ''}`,
+                        tanggal: new Date().toLocaleString('id-ID')
+                    };
+
+                    // Kami menggunakan mode: 'no-cors' agar pengiriman tetap berjalan meski script google tidak mengirim header CORS
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(spreadSheetData)
                     });
+
+                    // 2. Backup ke Firestore (Opsional)
+                    if (window.firebaseTools && user) {
+                        const { db, appId, collection, addDoc, serverTimestamp } = window.firebaseTools;
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'orders'), {
+                            ...formData, timestamp: serverTimestamp(), userId: user.uid
+                        });
+                    }
+
                     setSubmitted(true);
-                } catch (err) { setError("Gagal kirim: " + err.message); }
-                finally { setLoading(false); }
+                } catch (err) {
+                    setError("Terjadi kesalahan pengiriman. Pastikan URL Spreadsheet sudah benar.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const getCustomPlaceholder = (category) => {
+                switch(category) {
+                    case 'kemeja': return "tulis ukuran pundak, panjang, lingkar dada dan panjang tangan";
+                    case 'rompi': return "tulis ukuran pundak, panjang, dan lingkar dada";
+                    case 'bawah': return "tulis ukuran pinggang, panjang, dan lingkar paha";
+                    case 'gamis': return "tulis ukuran pundak, panjang, lingkar dada, dan panjang lengan";
+                    case 'kaosOlahraga': return "tulis ukuran panjang baju, lingkar dada, dan panjang tangan";
+                    case 'celanaOlahraga': return "tulis ukuran pinggang, panjang, dan lebar kaki bawah";
+                    default: return "tulis ukuran detail sesuai size chart";
+                }
             };
 
             const SizeInput = ({ label, category, chartData, options }) => (
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm transition-all hover:border-blue-200">
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">{label}</label>
-                        <button type="button" onClick={() => setActiveChart(chartData)} className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                            <IconInfo /> INFO
+                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition-all hover:border-blue-200">
+                    <div className="flex justify-between items-center mb-3">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">{label}</label>
+                        <button type="button" onClick={() => setActiveChart(chartData)} className="text-[11px] bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-bold flex items-center gap-1 hover:bg-blue-100 transition-colors">
+                            <IconInfo /> SIZE CHART
                         </button>
                     </div>
-                    <select required className="w-full p-3 bg-gray-50 border border-gray-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" 
+                    <select required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl text-base outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none" 
                         value={formData.ukuran[category].val} onChange={e => setFormData({...formData, ukuran: {...formData.ukuran, [category]: {...formData.ukuran[category], val: e.target.value}}})}>
                         <option value="">-- Pilih --</option>
                         {options.map(o => <option key={o} value={o}>{o}</option>)}
                         <option value="Custom">Custom/Jumbo</option>
                     </select>
                     {formData.ukuran[category].val === 'Custom' && (
-                        <textarea required placeholder="Detail CM..." className="w-full mt-2 p-2 bg-blue-50 border border-blue-100 rounded text-xs h-16 resize-none"
+                        <textarea required placeholder={getCustomPlaceholder(category)} className="w-full mt-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm h-28 resize-none focus:ring-2 focus:ring-blue-400 outline-none"
                         value={formData.ukuran[category].custom} onChange={e => setFormData({...formData, ukuran: {...formData.ukuran, [category]: {...formData.ukuran[category], custom: e.target.value}}})} />
                     )}
                 </div>
@@ -144,71 +183,70 @@
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                         </div>
                         <h2 className="text-2xl font-black text-gray-800 mb-2">Berhasil!</h2>
-                        <p className="text-gray-500 text-sm mb-8">Data seragam Ananda <b>{formData.namaLengkap}</b> telah kami terima.</p>
-                        <button onClick={() => {setFormData(INITIAL_FORM); setSubmitted(false);}} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-100">Terimakasih</button>
+                        <p className="text-gray-600 text-base mb-8 leading-relaxed">Data seragam Ananda <b>{formData.namaLengkap}</b> telah berhasil dikirim ke Spreadsheet Panitia.</p>
+                        <button onClick={() => {setFormData(INITIAL_FORM); setSubmitted(false);}} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-100 active:scale-95 transition-all text-lg">Terimakasih</button>
                     </div>
                 </div>
             );
 
             return (
-                <div className="pb-20">
-                    <header className="bg-blue-700 text-white pt-12 pb-24 px-6 rounded-b-[3.5rem] shadow-xl text-center relative overflow-hidden">
+                <div className="pb-24">
+                    <header className="bg-blue-700 text-white pt-14 pb-28 px-6 rounded-b-[4rem] shadow-xl text-center relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-full bg-white/5 opacity-20 pointer-events-none"></div>
                         <div className="relative z-10 flex flex-col items-center">
-                            <div className="w-24 h-24 bg-white p-1 rounded-full shadow-2xl mb-6 border-4 border-blue-400 overflow-hidden">
+                            <div className="w-28 h-28 bg-white p-1.5 rounded-full shadow-2xl mb-6 border-4 border-blue-400 overflow-hidden">
                                 <img src="https://iili.io/FsLlXA7.png" className="w-full h-full object-contain rounded-full" />
                             </div>
-                            <h1 className="text-xl md:text-2xl font-black uppercase tracking-tighter">Malika Islamic Boarding School</h1>
-                            <span className="mt-2 bg-blue-900/40 px-4 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">Form Ukuran Seragam 2026/2027</span>
+                            <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight px-4 leading-tight">Malika Islamic Boarding School</h1>
+                            <span className="mt-3 bg-blue-900/40 px-6 py-1.5 rounded-full text-xs font-bold tracking-[0.2em] uppercase">Form Seragam 2026/2027</span>
                         </div>
                     </header>
 
                     <main className="max-w-4xl mx-auto px-4 -mt-16 relative z-20">
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="bg-white rounded-[2rem] shadow-xl p-6 md:p-8">
-                                <div className="flex items-center gap-3 mb-6"><div className="text-blue-600"><IconUser /></div><h2 className="font-bold text-lg">Identitas Santri</h2></div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Nama Lengkap (Sesuai Pendaftaran)</label>
-                                        <input required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={formData.namaLengkap} onChange={e => setFormData({...formData, namaLengkap: e.target.value})} placeholder="Nama Lengkap" />
+                            <div className="bg-white rounded-[2.5rem] shadow-xl p-6 md:p-10">
+                                <div className="flex items-center gap-3 mb-8"><div className="text-blue-600"><IconUser /></div><h2 className="font-extrabold text-xl">Identitas Santri</h2></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest ml-1">Nama Lengkap ( sesuai data saat pendaftaran )</label>
+                                        <input required className="w-full p-5 bg-gray-50 border border-gray-100 rounded-[1.5rem] outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base font-medium" value={formData.namaLengkap} onChange={e => setFormData({...formData, namaLengkap: e.target.value})} placeholder="Ketik nama lengkap..." />
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Sekolah Asal</label>
-                                        <input required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" value={formData.sekolahAsal} onChange={e => setFormData({...formData, sekolahAsal: e.target.value})} placeholder="Sekolah Asal" />
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest ml-1">Sekolah Asal</label>
+                                        <input required className="w-full p-5 bg-gray-50 border border-gray-100 rounded-[1.5rem] outline-none focus:ring-2 focus:ring-blue-500 transition-all text-base font-medium" value={formData.sekolahAsal} onChange={e => setFormData({...formData, sekolahAsal: e.target.value})} placeholder="Sekolah asal sebelumnya..." />
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Jenis Kelamin</label>
-                                        <select required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-blue-800 outline-none" value={formData.jenisKelamin} onChange={e => setFormData({...formData, jenisKelamin: e.target.value})}>
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest ml-1">Jenis Kelamin</label>
+                                        <select required className="w-full p-5 bg-gray-50 border border-gray-100 rounded-[1.5rem] font-bold text-blue-800 outline-none text-base" value={formData.jenisKelamin} onChange={e => setFormData({...formData, jenisKelamin: e.target.value})}>
                                             <option value="">-- Pilih --</option>
                                             <option value="Putra">Putra (Laki-laki)</option>
                                             <option value="Putri">Putri (Perempuan)</option>
                                         </select>
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Jenjang di MIBS</label>
-                                        <select required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-blue-800 outline-none" value={formData.jenjang} onChange={e => setFormData({...formData, jenjang: e.target.value})}>
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest ml-1">Tingkat ( Kelas pada bulan juli 2026 di Malika )</label>
+                                        <select required className="w-full p-5 bg-gray-50 border border-gray-100 rounded-[1.5rem] font-bold text-blue-800 outline-none text-base" value={formData.jenjang} onChange={e => setFormData({...formData, jenjang: e.target.value})}>
                                             <option value="">-- Pilih --</option>
                                             <option value="Kelas VII SMP">Kelas VII SMP</option>
                                             <option value="Kelas X SMA">Kelas X SMA</option>
                                         </select>
                                     </div>
                                 </div>
-
-                                <div className="mt-6 p-4 bg-indigo-50 border-l-4 border-indigo-600 rounded-r-2xl flex gap-3 ring-1 ring-indigo-100">
+                                <div className="mt-8 p-6 bg-indigo-50 border-l-4 border-indigo-600 rounded-r-[1.5rem] flex gap-4 ring-1 ring-indigo-100 shadow-sm">
                                     <div className="text-indigo-600 shrink-0"><IconTriangle /></div>
-                                    <div className="text-[11px] text-indigo-900 leading-relaxed">
-                                        <b>KONFIRMASI PENTING:</b> Mohon teliti pilihan Jenis Kelamin dan Jenjang. Kesalahan pilihan berakibat fatal pada model dan ukuran seragam yang akan dikirimkan.
+                                    <div className="text-[13px] text-indigo-950 leading-relaxed font-medium">
+                                        <b className="block mb-1 text-sm uppercase">Konfirmasi Penting:</b> Mohon teliti pilihan Jenis Kelamin dan Tingkat. Kesalahan pilihan berakibat fatal pada model dan ukuran seragam yang akan dikirimkan.
                                     </div>
                                 </div>
                             </div>
 
                             {formData.jenisKelamin && (
-                                <div className="bg-white rounded-[2rem] shadow-xl p-6 md:p-8 scale-up-center">
-                                    <h2 className="font-bold text-lg mb-6 flex items-center gap-2">
-                                        <span className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-xs">02</span> 
+                                <div className="bg-white rounded-[2.5rem] shadow-xl p-6 md:p-10 scale-up-center">
+                                    <h2 className="font-extrabold text-xl mb-8 flex items-center gap-3">
+                                        <span className="w-10 h-10 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-sm font-black">02</span> 
                                         Ukuran Seragam {formData.jenisKelamin}
                                     </h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <SizeInput label="Kemeja Putih" category="kemeja" options={["S", "M", "L", "XL", "XXL"]} chartData={formData.jenisKelamin === 'Putra' ? SIZE_DATA.putra.kemeja : SIZE_DATA.putri.kemeja} />
                                         <SizeInput label="Rompi" category="rompi" options={["S", "M", "L", "XL", "XXL"]} chartData={formData.jenisKelamin === 'Putra' ? SIZE_DATA.putra.rompi : SIZE_DATA.putri.rompi} />
                                         <SizeInput label={formData.jenisKelamin === 'Putra' ? "Celana Biru" : "Rok Biru"} category="bawah" options={["S", "M", "L", "XL", "XXL"]} chartData={formData.jenisKelamin === 'Putra' ? SIZE_DATA.putra.celana : SIZE_DATA.putri.rok} />
@@ -216,11 +254,10 @@
                                         <SizeInput label="Kaos Olahraga" category="kaosOlahraga" options={["S", "M", "L", "XL", "XXL"]} chartData={SIZE_DATA.olahraga.kaos} />
                                         <SizeInput label="Celana Olahraga" category="celanaOlahraga" options={["S", "M", "L", "XL", "XXL"]} chartData={SIZE_DATA.olahraga.celana} />
                                     </div>
-
-                                    <div className="mt-10 flex flex-col items-center">
-                                        {error && <div className="mb-4 text-xs font-bold text-red-600 bg-red-50 p-3 rounded-xl animate-shake">{error}</div>}
-                                        <button type="submit" disabled={loading} className="w-full md:w-64 py-4 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-3">
-                                            {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><IconSend /> KIRIM DATA</>}
+                                    <div className="mt-12 flex flex-col items-center">
+                                        {error && <div className="mb-6 text-sm font-bold text-red-600 bg-red-50 p-4 rounded-2xl animate-shake border border-red-100">{error}</div>}
+                                        <button type="submit" disabled={loading} className="w-full md:w-80 py-5 bg-blue-600 text-white rounded-[1.5rem] font-black text-xl shadow-2xl shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-3">
+                                            {loading ? <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div> : <><IconSend /> KIRIM DATA</>}
                                         </button>
                                     </div>
                                 </div>
@@ -229,17 +266,17 @@
                     </main>
 
                     {activeChart && (
-                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setActiveChart(null)}>
-                            <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-                                <div className="bg-blue-600 p-4 text-white font-bold">{activeChart.title}</div>
-                                <div className="p-4 overflow-x-auto">
-                                    <table className="w-full text-[10px] md:text-xs text-left border-collapse">
-                                        <thead><tr className="bg-gray-100">{activeChart.headers.map(h => <th key={h} className="p-2 border">{h}</th>)}</tr></thead>
-                                        <tbody>{activeChart.rows.map((r, i) => <tr key={i}>{r.map(c => <td key={c} className="p-2 border font-medium">{c}</td>)}</tr>)}</tbody>
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setActiveChart(null)}>
+                            <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden scale-up-center" onClick={e => e.stopPropagation()}>
+                                <div className="bg-blue-600 p-5 text-white font-bold text-lg">{activeChart.title}</div>
+                                <div className="p-5 overflow-x-auto">
+                                    <table className="w-full text-xs md:text-sm text-left border-collapse">
+                                        <thead><tr className="bg-gray-100 font-bold">{activeChart.headers.map(h => <th key={h} className="p-3 border text-blue-900">{h}</th>)}</tr></thead>
+                                        <tbody>{activeChart.rows.map((r, i) => <tr key={i} className="hover:bg-blue-50 transition-colors">{r.map(c => <td key={c} className="p-3 border font-semibold">{c}</td>)}</tr>)}</tbody>
                                     </table>
                                 </div>
-                                <div className="p-4 bg-gray-50 text-right">
-                                    <button onClick={() => setActiveChart(null)} className="px-5 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm">Tutup</button>
+                                <div className="p-5 bg-gray-50 text-right">
+                                    <button onClick={() => setActiveChart(null)} className="px-8 py-3 bg-blue-600 text-white rounded-2xl font-bold text-base transition-all active:scale-95">Tutup</button>
                                 </div>
                             </div>
                         </div>
